@@ -18,7 +18,7 @@ export default function Parser() {
 
   const handle: MouseEventHandler<HTMLButtonElement> = async (e) => {
     e.preventDefault();
-    const res = await axios.post("http://localhost:8000/parse", {
+    const res = await axios.post("https://fp-parsing.vercel.app/parse", {
       text: input,
     });
     const data = res.data as Data;
