@@ -3,6 +3,7 @@ import axios from "axios";
 import Navbar from "../components/navbar";
 import { Helmet } from "react-helmet";
 import Ellipse from "../assets/ellipse";
+import Dialog from "../components/dialog";
 
 export interface Data {
   accepted: boolean;
@@ -15,14 +16,19 @@ export interface Data {
 export default function Parser() {
   const [input, setInput] = useState<string>("");
   const [result, setResult] = useState<Data>({} as Data);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [show, setShow] = useState<boolean>(false);
 
   const handle: MouseEventHandler<HTMLButtonElement> = async (e) => {
     e.preventDefault();
+    setShow(true);
+    setLoading(true);
     const res = await axios.post("https://fp-parsing.vercel.app/parse", {
       text: input,
     });
     const data = res.data as Data;
     setResult(data);
+    setLoading(false);
   };
   return (
     <>
@@ -60,15 +66,35 @@ export default function Parser() {
               Periksa
             </button>
           </div>
-          {result.accepted && (
-            <table className="table-auto container mx-auto z-30 mt-20">
+        </div>
+      </div>
+
+      <Dialog
+        show={show}
+        loading={loading}
+        close={() => setShow((prev) => !prev)}
+      >
+        <span className="text-xl">Hasil Parsing</span>
+        <span
+          className={`font-bold text-3xl ${
+            result.accepted ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          {result.accepted ? "VALID" : "TIDAK VALID"}
+        </span>
+        <span className="text-xl">
+          Untuk kalimat <span className="font-bold">{result.text}</span>
+        </span>
+        {result.accepted && (
+          <>
+            <table className="table-auto container mx-auto mt-5">
               <tbody>
                 {result.table.map((row, rindex) => (
                   <tr key={rindex}>
                     {row.map((text, cindex) => (
                       <td
                         key={cindex}
-                        className={` text-center p-5 border-2 border-white text-white ${
+                        className={` text-center p-5 border-2 border-black ${
                           rindex === result.table.length - 1 ? "font-bold" : ""
                         }`}
                       >
@@ -79,9 +105,9 @@ export default function Parser() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-      </div>
+          </>
+        )}
+      </Dialog>
     </>
   );
 }
