@@ -1,27 +1,31 @@
-import { ReactNode, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction } from "react";
 import Loading from "../assets/loading";
 
 export default function Dialog({
   children,
   show,
   loading,
+  maximize,
   close,
 }: {
   children: ReactNode;
   show: boolean;
   loading: boolean;
+  maximize: [boolean, Dispatch<SetStateAction<boolean>>];
   close: () => void;
 }) {
-  const [maximize, setMaximize] = useState(false);
+  const [isMaximize, setMaximize] = maximize;
 
   return (
     <>
       {show && (
         <div className="flex items-center justify-center w-full h-screen fixed top-0 left-0 z-50 backdrop-blur-[1px] bg-black/15 transition-all duration-300">
           <div
-            className={`relative flex items-center justify-center flex-col bg-white p-10 ${
-              maximize ? "min-w-full min-h-full" : "min-w-96 min-h-96"
-            } rounded-xl shadow-[0px_0px_13.1px_-1px_#00000045] transition-all duration-300`}
+            className={`relative flex items-center justify-center flex-col bg-white p-5 md:p-10 ${
+              isMaximize
+                ? "min-w-full min-h-full"
+                : "max-w-xs md:max-w-full md:min-w-96 md:min-h-96"
+            } rounded-xl shadow-[0px_0px_13.1px_-1px_#00000045] transition-all duration-500 ease-in-out overflow-hidden`}
           >
             {loading ? <Loading className="size-52" /> : <>{children}</>}
             <div
@@ -33,7 +37,7 @@ export default function Dialog({
                 onClick={() => setMaximize((prev) => !prev)}
                 className=" text-black p-2"
               >
-                {maximize ? (
+                {isMaximize ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"

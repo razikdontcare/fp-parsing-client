@@ -18,6 +18,7 @@ export default function Parser() {
   const [result, setResult] = useState<Data>({} as Data);
   const [loading, setLoading] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
+  const [maximize, setMaximize] = useState(false);
 
   const handle: MouseEventHandler<HTMLButtonElement> = async (e) => {
     e.preventDefault();
@@ -36,15 +37,17 @@ export default function Parser() {
         <title>4Parser | Parser</title>
       </Helmet>
 
-      <div className="flex flex-col items-center mx-auto min-h-screen w-full bg-background">
+      <div className="relative flex flex-col items-center mx-auto min-h-screen w-full bg-background overflow-hidden">
         <Navbar />
-        <Ellipse className="absolute top-0 left-0 z-10 opacity-[0.36]" />
+        <Ellipse className="hidden md:inline absolute bottom-0 text-[#222831] w-full inset-0 z-10 opacity-[0.36]" />
 
         <div className="flex items-center justify-center flex-col container mx-auto py-20 z-20 text-white">
           <div className="flex flex-col items-center justify-center gap-5">
-            <div className="flex flex-col items-center justify-center gap-10">
-              <h1 className="font-bold text-6xl">Parsing Kalimat</h1>
-              <p className="text-2xl text-center max-w-3xl">
+            <div className="flex flex-col items-center max-w-xs md:max-w-2xl lg:max-w-full justify-center gap-10">
+              <h1 className="font-bold text-6xl text-center">
+                Parsing Kalimat
+              </h1>
+              <p className="text-base md:text-xl lg:text-2xl text-center max-w-3xl">
                 Periksa kalimat dengan pola dasar dalam bahasa Indonesiadengan
                 algoritma Cocke-Younger-Kasami (CYK)
               </p>
@@ -73,6 +76,7 @@ export default function Parser() {
         show={show}
         loading={loading}
         close={() => setShow((prev) => !prev)}
+        maximize={[maximize, setMaximize]}
       >
         <span className="text-xl">Hasil Parsing</span>
         <span
@@ -87,24 +91,32 @@ export default function Parser() {
         </span>
         {result.accepted && (
           <>
-            <table className="table-auto container mx-auto mt-5">
-              <tbody>
-                {result.table.map((row, rindex) => (
-                  <tr key={rindex}>
-                    {row.map((text, cindex) => (
-                      <td
-                        key={cindex}
-                        className={` text-center p-5 border-2 border-black ${
-                          rindex === result.table.length - 1 ? "font-bold" : ""
-                        }`}
-                      >
-                        {text}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div
+              className={`w-full md:h-full ${
+                maximize ? "h-full" : "h-72"
+              } overflow-x-auto md:overflow-hidden`}
+            >
+              <table className="table-auto container mx-auto mt-5 ">
+                <tbody>
+                  {result.table.map((row, rindex) => (
+                    <tr key={rindex}>
+                      {row.map((text, cindex) => (
+                        <td
+                          key={cindex}
+                          className={`text-xs md:text-base text-center p-5 border-2 border-black ${
+                            rindex === result.table.length - 1
+                              ? "font-bold"
+                              : ""
+                          }`}
+                        >
+                          {text}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </Dialog>
