@@ -1,4 +1,4 @@
-import { MouseEventHandler, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import Navbar from "../components/navbar";
 import { Helmet } from "react-helmet";
@@ -22,7 +22,7 @@ export default function Parser() {
   const [maximize, setMaximize] = useState(false);
   const [active, setActive] = useState(0);
 
-  const handle: MouseEventHandler<HTMLButtonElement> = async (e) => {
+  const handle: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setShow(true);
     setLoading(true);
@@ -44,7 +44,10 @@ export default function Parser() {
         <Ellipse className="hidden md:inline absolute bottom-0 text-[#222831] w-full inset-0 z-10 opacity-[0.36]" />
 
         <div className="flex items-center justify-center flex-col container mx-auto py-20 z-20 text-white">
-          <div className="flex flex-col items-center justify-center gap-5">
+          <form
+            onSubmit={handle}
+            className="flex flex-col items-center justify-center gap-5"
+          >
             <div className="flex flex-col items-center max-w-xs md:max-w-2xl lg:max-w-full justify-center gap-10">
               <h1 className="font-bold text-6xl text-center">
                 Parsing Kalimat
@@ -65,13 +68,13 @@ export default function Parser() {
               Contoh: Saya sedang belajar di kampus
             </span>
             <button
-              onClick={handle}
+              type="submit"
               className="bg-button text-[#222831] px-16 py-5 rounded-xl font-medium hover:bg-button/80 transition-all duration-300 disabled:bg-neutral-500"
               disabled={loading || input === ""}
             >
               Periksa
             </button>
-          </div>
+          </form>
         </div>
       </div>
 
