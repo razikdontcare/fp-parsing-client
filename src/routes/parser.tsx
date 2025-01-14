@@ -9,9 +9,10 @@ export interface Data {
   accepted: boolean;
   text: string;
   table: string[][];
-  mermaid: string;
-  dot: string;
+  tree: string;
 }
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function Parser() {
   const [input, setInput] = useState<string>("");
@@ -19,12 +20,13 @@ export default function Parser() {
   const [loading, setLoading] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
   const [maximize, setMaximize] = useState(false);
+  const [active, setActive] = useState(0);
 
   const handle: MouseEventHandler<HTMLButtonElement> = async (e) => {
     e.preventDefault();
     setShow(true);
     setLoading(true);
-    const res = await axios.post("https://fp-parsing.vercel.app/parse", {
+    const res = await axios.post(`${API_URL}/parse`, {
       text: input,
     });
     const data = res.data as Data;
@@ -64,7 +66,8 @@ export default function Parser() {
             </span>
             <button
               onClick={handle}
-              className="bg-button text-[#222831] px-16 py-5 rounded-xl font-medium hover:bg-button/80 transition-all duration-300"
+              className="bg-button text-[#222831] px-16 py-5 rounded-xl font-medium hover:bg-button/80 transition-all duration-300 disabled:bg-neutral-500"
+              disabled={loading || input === ""}
             >
               Periksa
             </button>
@@ -91,32 +94,62 @@ export default function Parser() {
         </span>
         {result.accepted && (
           <>
-            <div
-              className={`w-full md:h-full ${
-                maximize ? "h-full" : "h-72"
-              } overflow-x-auto md:overflow-hidden`}
-            >
-              <table className="table-auto container mx-auto mt-5 ">
-                <tbody>
-                  {result.table.map((row, rindex) => (
-                    <tr key={rindex}>
-                      {row.map((text, cindex) => (
-                        <td
-                          key={cindex}
-                          className={`text-xs md:text-base text-center p-5 border-2 border-black ${
-                            rindex === result.table.length - 1
-                              ? "font-bold"
-                              : ""
-                          }`}
-                        >
-                          {text}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="w-full flex items-center justify-center gap-3">
+              <button
+                onClick={() => setActive(0)}
+                className={`w-full border ${
+                  active === 0 ? "bg-button" : "bg-white"
+                } transition-all duration-300`}
+              >
+                Tabel
+              </button>
+              <button
+                onClick={() => setActive(1)}
+                className={`w-full border ${
+                  active === 1 ? "bg-button" : "bg-white"
+                } transition-all duration-300`}
+              >
+                Tree
+              </button>
             </div>
+            {active === 0 ? (
+              <div
+                className={`w-full md:h-full ${
+                  maximize ? "h-full" : "h-72"
+                } overflow-x-auto md:overflow-hidden`}
+              >
+                <table className="table-auto container mx-auto mt-5 ">
+                  <tbody>
+                    {result.table.map((row, rindex) => (
+                      <tr key={rindex}>
+                        {row.map((text, cindex) => (
+                          <td
+                            key={cindex}
+                            className={`text-xs md:text-base text-center p-5 border-2 border-black ${
+                              rindex === result.table.length - 1
+                                ? "font-bold"
+                                : ""
+                            }`}
+                          >
+                            {text}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <>
+                <div
+                  className={`w-full md:h-full ${
+                    maximize ? "h-full" : "h-72"
+                  } overflow-x-auto md:overflow-hidden flex items-center justify-center`}
+                >
+                  <img src={result.tree} alt={result.text} className="w-96" />
+                </div>
+              </>
+            )}
           </>
         )}
       </Dialog>

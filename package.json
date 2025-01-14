@@ -12,6 +12,7 @@
   "dependencies": {
     "@xyflow/react": "^12.3.6",
     "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
     "graphviz-react": "^1.2.5",
     "mermaid": "^11.4.1",
     "react": "^18.3.1",
