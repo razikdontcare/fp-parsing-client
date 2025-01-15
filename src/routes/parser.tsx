@@ -21,17 +21,27 @@ export default function Parser() {
   const [show, setShow] = useState<boolean>(false);
   const [maximize, setMaximize] = useState(false);
   const [active, setActive] = useState(0);
+  const [error, setError] = useState<boolean>(false);
 
   const handle: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setShow(true);
     setLoading(true);
-    const res = await axios.post(`${API_URL}/parse`, {
-      text: input,
-    });
-    const data = res.data as Data;
-    setResult(data);
-    setLoading(false);
+    try {
+      const res = await axios.post(`${API_URL}/parse`, {
+        text: input,
+      });
+
+      const data = res.data as Data;
+      setResult(data);
+      setLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+      setError(true);
+      setLoading(false);
+    }
   };
   return (
     <>
@@ -84,80 +94,95 @@ export default function Parser() {
         close={() => setShow((prev) => !prev)}
         maximize={[maximize, setMaximize]}
       >
-        <span className="text-xl">Hasil Parsing</span>
-        <span
-          className={`font-bold text-3xl ${
-            result.accepted ? "text-green-500" : "text-red-500"
-          }`}
-        >
-          {result.accepted ? "VALID" : "TIDAK VALID"}
-        </span>
-        <span className="text-xl">
-          Untuk kalimat <span className="font-bold">{result.text}</span>
-        </span>
-        {result.accepted && (
+        {error ? (
           <>
-            <div className="w-full flex items-center justify-center gap-3">
-              {result.tree && (
-                <>
-                  <button
-                    onClick={() => setActive(0)}
-                    className={`w-full border ${
-                      active === 0 ? "bg-button" : "bg-white"
-                    } transition-all duration-300`}
-                  >
-                    Tabel
-                  </button>
-                  <button
-                    onClick={() => setActive(1)}
-                    className={`w-full border ${
-                      active === 1 ? "bg-button" : "bg-white"
-                    } transition-all duration-300`}
-                  >
-                    Tree
-                  </button>
-                </>
-              )}
-            </div>
-            {active === 0 ? (
-              <div
-                className={`w-full md:h-full ${
-                  maximize ? "h-full" : "h-72"
-                } overflow-x-auto md:overflow-hidden`}
-              >
-                <table className="table-auto container mx-auto mt-5 ">
-                  <tbody>
-                    {result.table.map((row, rindex) => (
-                      <tr key={rindex}>
-                        {row.map((text, cindex) => (
-                          <td
-                            key={cindex}
-                            className={`text-xs md:text-base text-center p-5 border-2 border-black ${
-                              rindex === result.table.length - 1
-                                ? "font-bold"
-                                : ""
-                            }`}
-                          >
-                            {text}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              result.tree && (
-                <>
+            <span className="text-xl">Terjadi Kesalahan</span>
+            <span className="text-lg">
+              Terjadi kesalahan saat memproses data, silahkan coba lagi
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-xl">Hasil Parsing</span>
+            <span
+              className={`font-bold text-3xl ${
+                result.accepted ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {result.accepted ? "VALID" : "TIDAK VALID"}
+            </span>
+            <span className="text-xl">
+              Untuk kalimat <span className="font-bold">{result.text}</span>
+            </span>
+            {result.accepted && (
+              <>
+                <div className="w-full flex items-center justify-center gap-3">
+                  {result.tree && (
+                    <>
+                      <button
+                        onClick={() => setActive(0)}
+                        className={`w-full border ${
+                          active === 0 ? "bg-button" : "bg-white"
+                        } transition-all duration-300`}
+                      >
+                        Tabel
+                      </button>
+                      <button
+                        onClick={() => setActive(1)}
+                        className={`w-full border ${
+                          active === 1 ? "bg-button" : "bg-white"
+                        } transition-all duration-300`}
+                      >
+                        Tree
+                      </button>
+                    </>
+                  )}
+                </div>
+                {active === 0 ? (
                   <div
                     className={`w-full md:h-full ${
                       maximize ? "h-full" : "h-72"
-                    } overflow-x-auto md:overflow-hidden flex items-center justify-center`}
+                    } overflow-x-auto md:overflow-hidden`}
                   >
-                    <img src={result.tree} alt={result.text} className="w-96" />
+                    <table className="table-auto container mx-auto mt-5 ">
+                      <tbody>
+                        {result.table.map((row, rindex) => (
+                          <tr key={rindex}>
+                            {row.map((text, cindex) => (
+                              <td
+                                key={cindex}
+                                className={`text-xs md:text-base text-center p-5 border-2 border-black ${
+                                  rindex === result.table.length - 1
+                                    ? "font-bold"
+                                    : ""
+                                }`}
+                              >
+                                {text}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </>
-              )
+                ) : (
+                  result.tree && (
+                    <>
+                      <div
+                        className={`w-full md:h-full ${
+                          maximize ? "h-full" : "h-72"
+                        } overflow-x-auto md:overflow-hidden flex items-center justify-center`}
+                      >
+                        <img
+                          src={result.tree}
+                          alt={result.text}
+                          className="w-96"
+                        />
+                      </div>
+                    </>
+                  )
+                )}
+              </>
             )}
           </>
         )}
