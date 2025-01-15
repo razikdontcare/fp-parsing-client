@@ -9,7 +9,7 @@ export interface Data {
   accepted: boolean;
   text: string;
   table: string[][];
-  tree: string;
+  tree: string | null;
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -98,22 +98,26 @@ export default function Parser() {
         {result.accepted && (
           <>
             <div className="w-full flex items-center justify-center gap-3">
-              <button
-                onClick={() => setActive(0)}
-                className={`w-full border ${
-                  active === 0 ? "bg-button" : "bg-white"
-                } transition-all duration-300`}
-              >
-                Tabel
-              </button>
-              <button
-                onClick={() => setActive(1)}
-                className={`w-full border ${
-                  active === 1 ? "bg-button" : "bg-white"
-                } transition-all duration-300`}
-              >
-                Tree
-              </button>
+              {result.tree && (
+                <>
+                  <button
+                    onClick={() => setActive(0)}
+                    className={`w-full border ${
+                      active === 0 ? "bg-button" : "bg-white"
+                    } transition-all duration-300`}
+                  >
+                    Tabel
+                  </button>
+                  <button
+                    onClick={() => setActive(1)}
+                    className={`w-full border ${
+                      active === 1 ? "bg-button" : "bg-white"
+                    } transition-all duration-300`}
+                  >
+                    Tree
+                  </button>
+                </>
+              )}
             </div>
             {active === 0 ? (
               <div
@@ -143,15 +147,17 @@ export default function Parser() {
                 </table>
               </div>
             ) : (
-              <>
-                <div
-                  className={`w-full md:h-full ${
-                    maximize ? "h-full" : "h-72"
-                  } overflow-x-auto md:overflow-hidden flex items-center justify-center`}
-                >
-                  <img src={result.tree} alt={result.text} className="w-96" />
-                </div>
-              </>
+              result.tree && (
+                <>
+                  <div
+                    className={`w-full md:h-full ${
+                      maximize ? "h-full" : "h-72"
+                    } overflow-x-auto md:overflow-hidden flex items-center justify-center`}
+                  >
+                    <img src={result.tree} alt={result.text} className="w-96" />
+                  </div>
+                </>
+              )
             )}
           </>
         )}
