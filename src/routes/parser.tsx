@@ -25,6 +25,7 @@ export default function Parser() {
   const [active, setActive] = useState(0);
   const [error, setError] = useState<boolean>(false);
   const [notEmpty, setNotEmpty] = useState<boolean>(false);
+  const [isFromHistory, setIsFromHistory] = useState<boolean>(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -38,7 +39,9 @@ export default function Parser() {
       });
 
       const data = res.data as Data;
-      await saveHistory(data);
+      if (!isFromHistory) {
+        await saveHistory(data);
+      }
       setResult(data);
       setLoading(false);
       setNotEmpty(true);
@@ -54,10 +57,19 @@ export default function Parser() {
   const handleHistoryClick = (text: string) => {
     if (formRef.current) {
       setInput(text);
+      setIsFromHistory(true);
 
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         formRef.current?.requestSubmit();
+
+        const isFromHistoryTimeout = setTimeout(() => {
+          setIsFromHistory(false);
+        }, 200);
+
+        return () => clearTimeout(isFromHistoryTimeout);
       }, 100);
+
+      return () => clearTimeout(timeout);
     }
   };
 
