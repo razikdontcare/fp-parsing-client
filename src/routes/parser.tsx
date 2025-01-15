@@ -45,6 +45,12 @@ export default function Parser() {
       setResult(data);
       setLoading(false);
       setNotEmpty(true);
+
+      const timeout = setTimeout(() => {
+        setInput("");
+      }, 100);
+
+      return () => clearTimeout(timeout);
     } catch (error) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -117,7 +123,7 @@ export default function Parser() {
                 className="bg-button text-[#222831] px-16 py-5 rounded-xl font-medium hover:bg-button/80 transition-all duration-300 disabled:bg-neutral-500"
                 disabled={loading || input === ""}
               >
-                Periksa
+                {loading ? "Loading..." : "Periksa"}
               </button>
             </form>
           </div>
