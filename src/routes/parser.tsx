@@ -183,7 +183,7 @@ export default function Parser() {
                                         {row.map((text, cindex) => (
                                           <td
                                             key={cindex}
-                                            className={`text-xs md:text-base text-center p-5 ${
+                                            className={`text-xs md:text-sm text-center p-3 ${
                                               rindex === result.table.length - 1
                                                 ? "font-bold"
                                                 : "border-2 border-black"
