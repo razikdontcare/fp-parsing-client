@@ -4,8 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        navbar: "#222831",
-        background: "#393E46",
+        background: {
+          primary: "#6880DE",
+          secondary: "#4652BE",
+        },
         button: "#5CE0E6",
         title: "#5CE0E6",
       },

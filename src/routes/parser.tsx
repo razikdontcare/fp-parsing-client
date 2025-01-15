@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Navbar from "../components/navbar";
 import { Helmet } from "react-helmet";
-import Ellipse from "../assets/ellipse";
-import Dialog from "../components/dialog";
+import { HistoryIcon } from "lucide-react";
+import Loading from "../assets/loading";
+import saveHistory from "../lib/saveHistory";
+import getHistory, { type History } from "../lib/getHistory";
 
 export interface Data {
   accepted: boolean;
@@ -15,13 +17,14 @@ export interface Data {
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Parser() {
+  const [history, setHistory] = useState<History[]>([]);
   const [input, setInput] = useState<string>("");
   const [result, setResult] = useState<Data>({} as Data);
   const [loading, setLoading] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
-  const [maximize, setMaximize] = useState(false);
   const [active, setActive] = useState(0);
   const [error, setError] = useState<boolean>(false);
+  const [notEmpty, setNotEmpty] = useState<boolean>(false);
 
   const handle: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
@@ -33,8 +36,10 @@ export default function Parser() {
       });
 
       const data = res.data as Data;
+      await saveHistory(data);
       setResult(data);
       setLoading(false);
+      setNotEmpty(true);
     } catch (error) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -43,150 +48,208 @@ export default function Parser() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    getHistory().then((data) => setHistory(data));
+  }, [history]);
+
   return (
     <>
       <Helmet>
         <title>4Parser | Parser</title>
       </Helmet>
 
-      <div className="relative flex flex-col items-center mx-auto min-h-screen w-full bg-background overflow-hidden">
+      <div className="relative flex flex-col items-center mx-auto w-full min-h-screen md:h-screen bg-white p-2 gap-2">
         <Navbar />
-        <Ellipse className="hidden md:inline absolute bottom-0 text-[#222831] w-full inset-0 z-10 opacity-[0.36]" />
 
-        <div className="flex items-center justify-center flex-col container mx-auto py-20 z-20 text-white">
-          <form
-            onSubmit={handle}
-            className="flex flex-col items-center justify-center gap-5"
-          >
-            <div className="flex flex-col items-center max-w-xs md:max-w-2xl lg:max-w-full justify-center gap-10">
-              <h1 className="font-bold text-6xl text-center">
-                Parsing Kalimat
-              </h1>
-              <p className="text-base md:text-xl lg:text-2xl text-center max-w-3xl">
-                Periksa kalimat dengan pola dasar dalam bahasa Indonesiadengan
-                algoritma Cocke-Younger-Kasami (CYK)
-              </p>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                type="text"
-                placeholder="Masukkan kalimat..."
-                className="bg-white rounded-xl py-5 px-5 text-black container mx-auto"
-              />
-            </div>
-            <span className="text-[#F3F3F3]/50 self-start">
-              Contoh: Saya sedang belajar di kampus
-            </span>
-            <button
-              type="submit"
-              className="bg-button text-[#222831] px-16 py-5 rounded-xl font-medium hover:bg-button/80 transition-all duration-300 disabled:bg-neutral-500"
-              disabled={loading || input === ""}
+        <div className="flex md:flex-row flex-col flex-1 items-center justify-center container mx-auto p-2 gap-3 lg:gap-8 z-20 text-white bg-gradient-to-b from-background-primary to-background-secondary rounded-xl overflow-hidden">
+          <div className="flex items-center container max-w-lg justify-center flex-col h-full p-3 lg:p-8">
+            <form
+              onSubmit={handle}
+              className="flex flex-col items-center justify-center gap-5 h-full"
             >
-              Periksa
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <Dialog
-        show={show}
-        loading={loading}
-        close={() => setShow((prev) => !prev)}
-        maximize={[maximize, setMaximize]}
-      >
-        {error ? (
-          <>
-            <span className="text-xl">Terjadi Kesalahan</span>
-            <span className="text-lg">
-              Terjadi kesalahan saat memproses data, silahkan coba lagi
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="text-xl">Hasil Parsing</span>
-            <span
-              className={`font-bold text-3xl ${
-                result.accepted ? "text-green-500" : "text-red-500"
+              <div className="flex flex-col items-center max-w-xs md:max-w-full justify-center gap-10">
+                <h1 className="font-bold md:text-4xl lg:text-5xl xl:text-6xl text-center">
+                  Parsing Kalimat
+                </h1>
+                <p className="text-base md:text-sm lg:text-xl text-center max-w-3xl">
+                  Periksa kalimat dengan pola dasar dalam bahasa Indonesia
+                  dengan algoritma Cocke-Younger-Kasami (CYK)
+                </p>
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  type="text"
+                  placeholder="Masukkan kalimat..."
+                  className="bg-white rounded-xl py-5 px-5 text-black container mx-auto"
+                />
+              </div>
+              <span className="text-[#F3F3F3]/50 self-start">
+                Contoh: Saya sedang belajar di kampus
+              </span>
+              <button
+                type="submit"
+                className="bg-button text-[#222831] px-16 py-5 rounded-xl font-medium hover:bg-button/80 transition-all duration-300 disabled:bg-neutral-500"
+                disabled={loading || input === ""}
+              >
+                Periksa
+              </button>
+            </form>
+          </div>
+          <div className="flex flex-col items-center bg-white container h-full rounded-lg text-black p-5">
+            <div className="flex items-center w-full justify-end">
+              <button
+                onClick={() => {
+                  if (notEmpty) {
+                    setShow((prev) => !prev);
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <HistoryIcon />
+                History
+              </button>
+            </div>
+            <div
+              className={`flex-1 flex flex-col items-center container h-full ${
+                show && "justify-center"
               }`}
             >
-              {result.accepted ? "VALID" : "TIDAK VALID"}
-            </span>
-            <span className="text-xl">
-              Untuk kalimat <span className="font-bold">{result.text}</span>
-            </span>
-            {result.accepted && (
-              <>
-                <div className="w-full flex items-center justify-center gap-3">
-                  {result.tree && (
-                    <>
-                      <button
-                        onClick={() => setActive(0)}
-                        className={`w-full border ${
-                          active === 0 ? "bg-button" : "bg-white"
-                        } transition-all duration-300`}
-                      >
-                        Tabel
-                      </button>
-                      <button
-                        onClick={() => setActive(1)}
-                        className={`w-full border ${
-                          active === 1 ? "bg-button" : "bg-white"
-                        } transition-all duration-300`}
-                      >
-                        Tree
-                      </button>
-                    </>
-                  )}
-                </div>
-                {active === 0 ? (
-                  <div
-                    className={`w-full md:h-full ${
-                      maximize ? "h-full" : "h-72"
-                    } overflow-x-auto md:overflow-hidden`}
-                  >
-                    <table className="table-auto container mx-auto mt-5 ">
-                      <tbody>
-                        {result.table.map((row, rindex) => (
-                          <tr key={rindex}>
-                            {row.map((text, cindex) => (
-                              <td
-                                key={cindex}
-                                className={`text-xs md:text-base text-center p-5 border-2 border-black ${
-                                  rindex === result.table.length - 1
-                                    ? "font-bold"
-                                    : ""
-                                }`}
-                              >
-                                {text}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+              {show ? (
+                loading ? (
+                  <>
+                    <Loading className="size-52" />
+                  </>
                 ) : (
-                  result.tree && (
-                    <>
-                      <div
-                        className={`w-full md:h-full ${
-                          maximize ? "h-full" : "h-72"
-                        } overflow-x-auto md:overflow-hidden flex items-center justify-center`}
-                      >
-                        <img
-                          src={result.tree}
-                          alt={result.text}
-                          className="w-96"
-                        />
+                  <>
+                    {!error ? (
+                      <>
+                        <span
+                          className={`font-bold text-3xl ${
+                            result.accepted ? "text-green-500" : "text-red-500"
+                          }`}
+                        >
+                          {result.accepted ? "VALID" : "TIDAK VALID"}
+                        </span>
+                        <span className="text-xl text-center">
+                          Untuk kalimat{" "}
+                          <span className="font-bold">{result.text}</span>
+                        </span>
+                        {result.accepted && (
+                          <>
+                            <div className="w-full flex items-center justify-center gap-3">
+                              {result.tree && (
+                                <>
+                                  <button
+                                    onClick={() => setActive(0)}
+                                    className={`w-full border ${
+                                      active === 0 ? "bg-button" : "bg-white"
+                                    } transition-all duration-300`}
+                                  >
+                                    Tabel
+                                  </button>
+                                  <button
+                                    onClick={() => setActive(1)}
+                                    className={`w-full border ${
+                                      active === 1 ? "bg-button" : "bg-white"
+                                    } transition-all duration-300`}
+                                  >
+                                    Tree
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                            {active === 0 ? (
+                              <div
+                                className={`w-full h-full flex items-center justify-center overflow-x-auto md:overflow-hidden`}
+                              >
+                                <table className="table-auto table-cell md:flex items-center justify-center container mx-auto">
+                                  <tbody>
+                                    {result.table.map((row, rindex) => (
+                                      <tr key={rindex}>
+                                        {row.map((text, cindex) => (
+                                          <td
+                                            key={cindex}
+                                            className={`text-xs md:text-base text-center p-5 ${
+                                              rindex === result.table.length - 1
+                                                ? "font-bold"
+                                                : "border-2 border-black"
+                                            }`}
+                                          >
+                                            {text}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              result.tree && (
+                                <>
+                                  <div
+                                    className={`w-full h-full overflow-x-auto md:overflow-hidden flex items-center justify-center`}
+                                  >
+                                    <img
+                                      src={result.tree}
+                                      alt={result.text}
+                                      className="w-96"
+                                    />
+                                  </div>
+                                </>
+                              )
+                            )}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-2xl">Terjadi kesalahan</span>
+                      </>
+                    )}
+                  </>
+                )
+              ) : (
+                <>
+                  <div className="flex flex-col w-full border-t border-b border-black mt-5">
+                    {history.length > 0 ? (
+                      history.map((h, index) => (
+                        <div
+                          key={index}
+                          className={`flex flex-col items-center justify-center w-full ${
+                            index !== history.length - 1 && "border-b"
+                          } border-black py-3`}
+                        >
+                          <div className="flex items-center w-full gap-2">
+                            <span className="min-w-20">Kalimat</span>
+                            <span>:</span>
+                            <span className="w-full">{h.text}</span>
+                          </div>
+                          <div className="flex items-center w-full gap-2">
+                            <span className="min-w-20">Hasil</span>
+                            <span>:</span>
+                            <span
+                              className={`w-full ${
+                                h.accepted ? "text-[#159656]" : "text-[#D90000]"
+                              }`}
+                            >
+                              {h.accepted ? "Valid" : "Tidak Valid"}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex items-center justify-center w-full py-5">
+                        <span className="text-center">Tidak ada riwayat</span>
                       </div>
-                    </>
-                  )
-                )}
-              </>
-            )}
-          </>
-        )}
-      </Dialog>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

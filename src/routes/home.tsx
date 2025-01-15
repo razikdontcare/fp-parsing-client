@@ -12,10 +12,10 @@ function Home() {
         />
       </Helmet>
 
-      <div className="flex flex-col items-center mx-auto min-h-screen w-full bg-background overflow-hidden">
+      <div className="flex flex-col items-center mx-auto min-h-screen w-full bg-white p-2 overflow-hidden gap-2">
         <Navbar />
 
-        <div className="flex items-center justify-center flex-col container mx-auto py-20 gap-24 transition-all duration-300">
+        <div className="flex items-center justify-center flex-col container mx-auto p-2 pt-10 md:pt-0 md:py-20 gap-14 md:gap-24 transition-all duration-300 bg-gradient-to-b from-background-primary to-background-secondary rounded-xl">
           <div className="flex items-center justify-center flex-col gap-3">
             <div className="flex flex-col gap-3 max-w-sm w-full items-center justify-center">
               <h1 className="text-white text-2xl xl:text-4xl italic font-bold">
