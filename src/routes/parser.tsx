@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Navbar from "../components/navbar";
 import { Helmet } from "react-helmet";
@@ -26,6 +26,8 @@ export default function Parser() {
   const [error, setError] = useState<boolean>(false);
   const [notEmpty, setNotEmpty] = useState<boolean>(false);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   const handle: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setShow(true);
@@ -49,6 +51,16 @@ export default function Parser() {
     }
   };
 
+  const handleHistoryClick = (text: string) => {
+    if (formRef.current) {
+      setInput(text);
+
+      setTimeout(() => {
+        formRef.current?.requestSubmit();
+      }, 100);
+    }
+  };
+
   useEffect(() => {
     getHistory().then((data) => setHistory(data));
   }, [history]);
@@ -65,6 +77,7 @@ export default function Parser() {
         <div className="flex md:flex-row flex-col flex-1 items-center justify-center container mx-auto p-2 gap-3 lg:gap-8 z-20 text-white bg-gradient-to-b from-background-primary to-background-secondary rounded-xl overflow-hidden">
           <div className="flex items-center container max-w-lg justify-center flex-col h-full p-3 lg:p-8">
             <form
+              ref={formRef}
               onSubmit={handle}
               className="flex flex-col items-center justify-center gap-5 h-full"
             >
@@ -111,7 +124,7 @@ export default function Parser() {
               </button>
             </div>
             <div
-              className={`flex-1 flex flex-col items-center container h-full ${
+              className={`flex-1 flex flex-col overflow-auto items-center container h-full ${
                 show && "justify-center"
               }`}
             >
@@ -161,7 +174,7 @@ export default function Parser() {
                             </div>
                             {active === 0 ? (
                               <div
-                                className={`w-full h-full flex items-center justify-center overflow-x-auto md:overflow-hidden`}
+                                className={`w-full h-full flex items-center justify-center overflow-x-auto`}
                               >
                                 <table className="table-auto table-cell md:flex items-center justify-center container mx-auto">
                                   <tbody>
@@ -214,11 +227,12 @@ export default function Parser() {
                   <div className="flex flex-col w-full border-t border-b border-black mt-5">
                     {history.length > 0 ? (
                       history.map((h, index) => (
-                        <div
+                        <button
                           key={index}
-                          className={`flex flex-col items-center justify-center w-full ${
+                          onClick={() => handleHistoryClick(h.text)}
+                          className={`flex flex-col items-center justify-center w-full text-start ${
                             index !== history.length - 1 && "border-b"
-                          } border-black py-3`}
+                          } border-black py-3 hover:bg-black/5`}
                         >
                           <div className="flex items-center w-full gap-2">
                             <span className="min-w-20">Kalimat</span>
@@ -236,7 +250,7 @@ export default function Parser() {
                               {h.accepted ? "Valid" : "Tidak Valid"}
                             </span>
                           </div>
-                        </div>
+                        </button>
                       ))
                     ) : (
                       <div className="flex items-center justify-center w-full py-5">
